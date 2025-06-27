@@ -1,0 +1,9 @@
+stages:
+  - lint
+
+flake8-lint:
+  image: python:3.11
+  stage: lint
+  script:
+    - pip install flake8
+    - flake8 .
