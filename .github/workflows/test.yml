@@ -24,6 +24,7 @@ jobs:
           pip install pytest
           pip install flake8
           pip install mypy
+          pip install types-requests
           pip install python-telegram-bot httpx
 
       - name: Run flake8 linter
