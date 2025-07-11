@@ -39,7 +39,7 @@ application = Application.builder().token(TOKEN).build()
 
 # Клавиатура для главного меню
 main_keyboard = ReplyKeyboardMarkup(
-    [["/ask", "/help"]],
+    [["/ask", "/help"], ["/stats", "/history"], ["/clear"]],
     resize_keyboard=True,
     one_time_keyboard=False,
 )
