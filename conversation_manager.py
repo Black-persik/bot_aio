@@ -188,8 +188,8 @@ class ConversationManager:
             # Создаем контекст из истории
             context = self._create_context_from_history(history, question)
             
-            # Генерируем ответ с помощью PerfectGPTClient
-            response = await self.perfect_client.generate_perfect_response(question)
+            # Генерируем ответ с помощью PerfectGPTClient, передавая весь контекст!
+            response = await self.perfect_client.generate_perfect_response(context)
             
             # Добавляем контекстную информацию к ответу
             contextual_response = f"{response}\n\n📚 *Контекст диалога учтен*"
