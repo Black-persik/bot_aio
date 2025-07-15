@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-МАКСИМАЛЬНО ТОЧНЫЙ GPT API CLIENT
-Использует полный анализ app_structure.json + внешний Gemini API
-"""
-
 import json
 import asyncio
 import requests
@@ -11,13 +5,11 @@ import logging
 from typing import Dict, List, Optional, Tuple
 from collections import defaultdict
 
-# Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class PerfectGPTClient:
     def __init__(self):
-        """Инициализация максимально точного клиента"""
         self.api_url = "https://namazlive.herokuapp.com/gpt/generate"
         self.api_key = "jiro_dreams_of_sushi"
         self.headers = {
@@ -25,20 +17,11 @@ class PerfectGPTClient:
             "x-api-key": self.api_key
         }
         
-        # Загружаем и анализируем структуру приложения
         self.app_structure = self._load_app_structure()
         self.perfect_analysis = self._create_perfect_analysis()
         
-        print("🎯 PERFECT GPT CLIENT ИНИЦИАЛИЗИРОВАН")
-        print(f"📊 Проанализировано {len(self.perfect_analysis['tabs'])} вкладок")
-        print(f"🔧 Найдено {len(self.perfect_analysis['functions'])} функций")
-        print(f"📚 Найдено {len(self.perfect_analysis['articles'])} статей")
-        print(f"🕌 Найдено {len(self.perfect_analysis['prayers'])} молитв")
-        print(f"⚙️ Найдено {len(self.perfect_analysis['settings'])} настроек")
-        print(f"🎨 Найдено {len(self.perfect_analysis['ui_elements'])} UI элементов")
     
     def _load_app_structure(self) -> Dict:
-        """Загружает полную структуру приложения"""
         try:
             with open('app_structure.json', 'r', encoding='utf-8') as f:
                 return json.load(f)
@@ -47,7 +30,6 @@ class PerfectGPTClient:
             return {}
     
     def _create_perfect_analysis(self) -> Dict:
-        """Создает максимально детальный анализ структуры приложения"""
         analysis = {
             'tabs': {},
             'functions': {},
@@ -63,7 +45,6 @@ class PerfectGPTClient:
             print("❌ app_structure.json не загружен")
             return analysis
         
-        # Определяем тип структуры
         if isinstance(self.app_structure, list):
             tabs = self.app_structure
             print(f"📁 Структура файла: список, вкладок: {len(tabs)}")
@@ -83,7 +64,6 @@ class PerfectGPTClient:
             print("❌ Неизвестная структура app_structure.json")
             return analysis
         
-        # Анализируем каждую вкладку максимально детально
         for tab in tabs:
             tab_id = tab.get('id', 'unknown')
             tab_title = tab.get('title', 'Без названия')
@@ -97,17 +77,13 @@ class PerfectGPTClient:
                 'navigation': []
             }
             
-            # Анализируем все элементы вкладки
             if 'items' in tab:
-                # Сохраняем элементы вкладки
                 analysis['tabs'][tab_id]['items'] = tab['items']
-                # Анализируем элементы для классификации
                 self._analyze_tab_items_perfect(tab['items'], analysis, tab_id)
         
         return analysis
     
     def _analyze_tab_items_perfect(self, items: List, analysis: Dict, tab_id: str, path: str = ""):
-        """Максимально детальный анализ элементов вкладки"""
         for item in items:
             item_id = item.get('id', 'unknown')
             item_title = item.get('title', 'Без названия')
@@ -116,7 +92,6 @@ class PerfectGPTClient:
             current_path = f"{path}/{item_id}" if path else item_id
             full_path = f"{tab_id}/{current_path}"
             
-            # Создаем детальную запись элемента
             element_info = {
                 'id': item_id,
                 'title': item_title,
@@ -131,7 +106,6 @@ class PerfectGPTClient:
                 'items': []
             }
             
-            # Классифицируем элемент
             if item_type == 'function':
                 analysis['functions'][item_id] = element_info
             elif item_type == 'article':
@@ -143,12 +117,10 @@ class PerfectGPTClient:
             else:
                 analysis['ui_elements'][item_id] = element_info
             
-            # Добавляем в поисковый индекс
             keywords = self._extract_keywords_perfect(item_title, item.get('description', ''))
             for keyword in keywords:
                 analysis['search_index'][keyword].append(element_info)
             
-            # Анализируем подэлементы
             if 'items' in item and item['items']:
                 element_info['items'] = []
                 for sub_item in item['items']:
@@ -163,20 +135,16 @@ class PerfectGPTClient:
                     }
                     element_info['items'].append(sub_info)
                     
-                    # Добавляем подэлементы в поисковый индекс
                     sub_keywords = self._extract_keywords_perfect(sub_info['title'], sub_info['description'])
                     for keyword in sub_keywords:
                         analysis['search_index'][keyword].append(sub_info)
                 
-                # Рекурсивно анализируем подэлементы
                 self._analyze_tab_items_perfect(item['items'], analysis, tab_id, current_path)
     
     def _extract_keywords_perfect(self, title: str, description: str) -> List[str]:
-        """Извлекает ключевые слова из заголовка и описания"""
         text = f"{title} {description}".lower()
         keywords = []
         
-        # Основные ключевые слова
         keyword_patterns = [
             'prayer', 'молитва', 'намаз', 'fard', 'sunnah', 'witr', 'tahajjud',
             'settings', 'настройки', 'app', 'приложение', 'language', 'язык',
@@ -190,7 +158,6 @@ class PerfectGPTClient:
             if pattern in text:
                 keywords.append(pattern)
         
-        # Добавляем отдельные слова
         words = text.split()
         for word in words:
             if len(word) > 3 and word not in keywords:
@@ -199,10 +166,8 @@ class PerfectGPTClient:
         return keywords
     
     def _find_exact_path(self, question: str) -> Optional[Dict]:
-        """Находит точный путь к элементу по вопросу"""
         question_lower = question.lower()
         
-        # Ищем точные совпадения
         for keyword, elements in self.perfect_analysis['search_index'].items():
             if keyword in question_lower:
                 for element in elements:
@@ -212,15 +177,12 @@ class PerfectGPTClient:
         return None
     
     def _is_relevant(self, element: Dict, question: str) -> bool:
-        """Проверяет релевантность элемента вопросу"""
         title = element.get('title', '').lower()
         description = element.get('description', '').lower()
         
-        # Проверяем точные совпадения
         if any(word in title for word in question.split()):
             return True
         
-        # Проверяем синонимы
         synonyms = {
             'dark': ['темный', 'темная', 'темное', 'dark mode', 'темный режим'],
             'language': ['язык', 'language', 'lang'],
@@ -237,20 +199,16 @@ class PerfectGPTClient:
         return False
     
     def _create_perfect_system_message(self, question: str, found_element: Optional[Dict]) -> str:
-        """Создает максимально точное системное сообщение с ВСЕМИ деталями из app_structure.json"""
         
-        # Базовое сообщение
         base_message = """Ты - эксперт по приложению NamazApp. Ты знаешь ВСЮ структуру приложения до мельчайших деталей.
 
 ПОЛНАЯ СТРУКТУРА ПРИЛОЖЕНИЯ ИЗ app_structure.json:
 """
         
-        # Добавляем ВСЕ вкладки с полными деталями
         base_message += "\n📱 ВКЛАДКИ ПРИЛОЖЕНИЯ:\n"
         for tab_id, tab_info in self.perfect_analysis['tabs'].items():
             base_message += f"\nВКЛАДКА: {tab_info['title']} (ID: {tab_id}, Тип: {tab_info['type']})\n"
             
-            # Добавляем все элементы вкладки с полными деталями
             if 'items' in tab_info:
                 base_message += "ЭЛЕМЕНТЫ ВКЛАДКИ:\n"
                 for item in tab_info['items']:
@@ -268,7 +226,6 @@ class PerfectGPTClient:
                     if item.get('shows'):
                         base_message += f"    Показывается: {item['shows']}\n"
                     
-                    # Добавляем подэлементы
                     if item.get('items'):
                         base_message += f"    ПОДЭЛЕМЕНТЫ:\n"
                         for sub_item in item['items']:
@@ -284,7 +241,6 @@ class PerfectGPTClient:
                             if sub_item.get('knowledge'):
                                 base_message += f"        Знания: {sub_item['knowledge']}\n"
                             
-                            # Добавляем элементы подэлементов
                             if sub_item.get('items'):
                                 base_message += f"        ЭЛЕМЕНТЫ:\n"
                                 for sub_sub_item in sub_item['items']:
@@ -300,7 +256,6 @@ class PerfectGPTClient:
                                     if sub_sub_item.get('knowledge'):
                                         base_message += f"            Знания: {sub_sub_item['knowledge']}\n"
         
-        # Добавляем ВСЕ молитвы с точными деталями
         base_message += "\n🕌 МОЛИТВЫ (ТОЧНЫЕ ДАННЫЕ):\n"
         for prayer_id, prayer_info in self.perfect_analysis['prayers'].items():
             base_message += f"- {prayer_info['title']} (ID: {prayer_id})\n"
@@ -314,7 +269,6 @@ class PerfectGPTClient:
             if prayer_info.get('knowledge'):
                 base_message += f"  Знания: {prayer_info['knowledge']}\n"
         
-        # Добавляем ВСЕ настройки с точными деталями
         base_message += "\n⚙️ НАСТРОЙКИ (ТОЧНЫЕ ДАННЫЕ):\n"
         for setting_id, setting_info in self.perfect_analysis['settings'].items():
             base_message += f"- {setting_info['title']} (ID: {setting_id})\n"
@@ -328,7 +282,6 @@ class PerfectGPTClient:
             if setting_info.get('knowledge'):
                 base_message += f"  Знания: {setting_info['knowledge']}\n"
         
-        # Добавляем ВСЕ статьи с точными деталями
         base_message += "\n📚 СТАТЬИ (ТОЧНЫЕ ДАННЫЕ):\n"
         for article_id, article_info in self.perfect_analysis['articles'].items():
             base_message += f"- {article_info['title']} (ID: {article_id})\n"
@@ -342,7 +295,6 @@ class PerfectGPTClient:
             if article_info.get('icon'):
                 base_message += f"  Иконка: {article_info['icon']}\n"
         
-        # Добавляем ВСЕ функции с точными деталями
         base_message += "\n🔧 ФУНКЦИИ (ТОЧНЫЕ ДАННЫЕ):\n"
         for func_id, func_info in self.perfect_analysis['functions'].items():
             base_message += f"- {func_info['title']} (ID: {func_id})\n"
@@ -356,7 +308,6 @@ class PerfectGPTClient:
             if func_info.get('icon'):
                 base_message += f"  Иконка: {func_info['icon']}\n"
         
-        # Добавляем ВСЕ UI элементы с точными деталями
         base_message += "\n🎨 UI ЭЛЕМЕНТЫ (ТОЧНЫЕ ДАННЫЕ):\n"
         for ui_id, ui_info in self.perfect_analysis['ui_elements'].items():
             base_message += f"- {ui_info['title']} (ID: {ui_id})\n"
@@ -374,7 +325,6 @@ class PerfectGPTClient:
             if ui_info.get('knowledge'):
                 base_message += f"  Знания: {ui_info['knowledge']}\n"
         
-        # Добавляем информацию о найденном элементе
         if found_element:
             base_message += f"""
 🎯 НАЙДЕННЫЙ ЭЛЕМЕНТ ДЛЯ ВОПРОСА:
@@ -390,7 +340,6 @@ class PerfectGPTClient:
 - Знания: {found_element.get('knowledge', {})}
 """
             
-            # Добавляем информацию о подэлементах
             if found_element.get('items'):
                 base_message += "\nПОДЭЛЕМЕНТЫ НАЙДЕННОГО ЭЛЕМЕНТА:\n"
                 for item in found_element['items']:
@@ -406,7 +355,6 @@ class PerfectGPTClient:
                     if item.get('knowledge'):
                         base_message += f"  Знания: {item['knowledge']}\n"
         
-        # Добавляем статистику
         base_message += f"""
 📊 СТАТИСТИКА:
 - Всего вкладок: {len(self.perfect_analysis['tabs'])}
@@ -433,19 +381,17 @@ class PerfectGPTClient:
         
         return base_message
     
-    async def generate_perfect_response(self, question: str) -> str:
-        """Генерирует максимально точный ответ"""
+    async def generate_perfect_response(self, context: str) -> str:
         try:
-            # Находим точный элемент
-            found_element = self._find_exact_path(question)
+            # Для поиска элемента используем только последний вопрос из контекста
+            last_question = context.split('🎯 ТЕКУЩИЙ ВОПРОС:')[-1].split('\n')[0].strip() if '🎯 ТЕКУЩИЙ ВОПРОС:' in context else context
+            found_element = self._find_exact_path(last_question)
             
-            # Создаем системное сообщение
-            system_message = self._create_perfect_system_message(question, found_element)
+            system_message = self._create_perfect_system_message(last_question, found_element)
             
-            # Формируем payload для вашего API
             payload = {
                 "user_id": "multi_agent_recommender",
-                "user_message": question,
+                "user_message": context,  # Передаем весь контекст!
                 "system_message": system_message,
                 "llm_model": "gemini-2.0-flash",
                 "response_schema": {
@@ -453,7 +399,6 @@ class PerfectGPTClient:
                 }
             }
             
-            # Отправляем запрос
             response = requests.post(
                 self.api_url,
                 headers=self.headers,
@@ -466,8 +411,7 @@ class PerfectGPTClient:
                 if "answer" in result:
                     answer = result["answer"]
                     
-                    # Форматируем ответ с информацией о точности
-                    formatted_response = self._format_perfect_response(answer, found_element, question)
+                    formatted_response = self._format_perfect_response(answer, found_element, last_question)
                     return formatted_response
                 else:
                     return "❌ Ошибка: Неожиданный формат ответа от API"
@@ -479,13 +423,10 @@ class PerfectGPTClient:
             return f"❌ Ошибка: {str(e)}"
     
     def _format_perfect_response(self, api_answer: str, found_element: Optional[Dict], question: str) -> str:
-        """Форматирует ответ с информацией о точности"""
         response_parts = []
         
-        # Основной ответ
         response_parts.append(api_answer)
         
-        # Информация о точности
         if found_element:
             response_parts.append(f"\n\n🎯 **ТОЧНОСТЬ:**")
             response_parts.append(f"Найден элемент: **{found_element.get('title', 'Неизвестно')}**")
@@ -499,14 +440,12 @@ class PerfectGPTClient:
         return "\n".join(response_parts)
 
 def main():
-    """Тестирование максимально точного клиента"""
     print("🎯 ТЕСТИРОВАНИЕ МАКСИМАЛЬНО ТОЧНОГО GPT CLIENT")
     print("=" * 60)
     
     client = PerfectGPTClient()
     
-    # Тестовые вопросы
-    test_questions = [
+    test_questions_list = [
         "Как включить темный режим?",
         "Где найти настройки языка?",
         "Как изменить время молитв?",
@@ -519,41 +458,21 @@ def main():
     print("=" * 60)
     
     async def test_questions():
-        for i, question in enumerate(test_questions, 1):
+        for i, question in enumerate(test_questions_list, 1):
             print(f"\n{i}. Вопрос: {question}")
             print("-" * 50)
-            
             try:
-                response = await client.generate_perfect_response(question)
+                # Формируем контекст для теста (эмулируем историю)
+                context = f"ВОПРОС ПОЛЬЗОВАТЕЛЯ: {question}"
+                response = await client.generate_perfect_response(context)
                 print(f"Ответ:\n{response}")
             except Exception as e:
                 print(f"❌ Ошибка: {e}")
-            
             print("-" * 50)
-    
-    # Запускаем тестирование
     asyncio.run(test_questions())
     
     print("\n🎉 ТЕСТИРОВАНИЕ ЗАВЕРШЕНО!")
     print("=" * 60)
 
 if __name__ == "__main__":
-    import asyncio
-    client = PerfectGPTClient()
-    
-    print("\n🎯 ИНТЕРАКТИВНЫЙ РЕЖИМ МАКСИМАЛЬНО ТОЧНОГО GPT CLIENT")
-    print("Введите вопрос или 'exit' для выхода")
-    print("=" * 60)
-    
-    while True:
-        question = input("\nВаш вопрос: ")
-        if question.lower() == "exit":
-            break
-        
-        try:
-            response = asyncio.run(client.generate_perfect_response(question))
-            print(f"\nОтвет:\n{response}")
-        except Exception as e:
-            print(f"❌ Ошибка: {e}")
-        
-        print("-" * 60) 
+    main() 
