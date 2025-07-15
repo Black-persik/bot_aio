@@ -39,7 +39,7 @@ application = Application.builder().token(TOKEN).build()
 
 # Клавиатура для главного меню
 main_keyboard = ReplyKeyboardMarkup(
-    [["/ask", "/help"], ["/stats", "/history"], ["/clear"]],
+    [["/ask", "/help"]],
     resize_keyboard=True,
     one_time_keyboard=False,
 )
@@ -171,14 +171,15 @@ async def ask_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     user_text = update.message.text
     user_id = update.effective_user.id
     context.user_data['last_message'] = user_text
-    
+    global last_bot_response
     # Генерируем контекстный ответ с помощью ConversationManager
     response_to_bot = await conversation_manager.generate_contextual_response(user_id, user_text)
     print(response_to_bot)
-    
+    last_bot_response = response_to_bot  # Сохраняем ответ для возврата через /webhook
     await update.message.reply_text(
         response_to_bot,
         reply_markup=main_keyboard,
+        parse_mode='Markdown',
     )
     
     # Сохраняем сообщения в API (для совместимости с существующей системой)
@@ -368,6 +369,8 @@ async def send_response(request: QuestionRequest)-> str:
     answer = await model.generate_perfect_response(request.question)
     return answer
 # ===== Вебхук и запуск =====
+last_bot_response = None  # Глобальная переменная для хранения последнего ответа
+
 @app.post("/webhook")
 async def telegram_webhook(request: Request):
     try:
