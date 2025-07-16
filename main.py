@@ -361,12 +361,20 @@ def register_handlers():
 
 
 register_handlers()
+class SmartQuestionRequest(BaseModel):
+    question: str
+    user_id: int
 class QuestionRequest(BaseModel):
     question: str
 @app.post("/send_response")
 async def send_response(request: QuestionRequest)-> str:
     """This endpoint send the question from the user to the LLM model"""
     answer = await model.generate_perfect_response(request.question)
+    return answer
+@app.post("/send_response_with_history")
+async def send_response_with_history(request: SmartQuestionRequest)-> str:
+    """This endpoint send the question from the user to the LLM model with history"""
+    answer = await conversation_manager.generate_contextual_response(request.user_id, request.question)
     return answer
 # ===== Вебхук и запуск =====
 last_bot_response = None  # Глобальная переменная для хранения последнего ответа
